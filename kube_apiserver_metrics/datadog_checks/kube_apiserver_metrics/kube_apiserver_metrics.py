@@ -13,8 +13,6 @@ METRICS = {
     'apiserver_current_inflight_requests': 'current_inflight_requests',
     # Deprecated in 1.23 (replaced by apiserver_longrunning_requests)
     'apiserver_longrunning_gauge': 'longrunning_gauge',
-    'go_threads': 'go_threads',
-    'go_goroutines': 'go_goroutines',
     'APIServiceRegistrationController_depth': 'APIServiceRegistrationController_depth',
     # Deprecated in 1.22 (replaced by apiserver_storage_objects)
     'etcd_object_counts': 'etcd_object_counts',
@@ -30,11 +28,6 @@ METRICS = {
     'grpc_client_handled_total': 'grpc_client_handled_total',
     'grpc_client_msg_sent_total': 'grpc_client_msg_sent_total',
     'grpc_client_msg_received_total': 'grpc_client_msg_received_total',
-    # For Kubernetes < 1.14
-    'rest_client_request_latency_seconds': 'rest_client_request_latency_seconds',
-    'apiserver_admission_webhook_admission_latencies_seconds': 'admission_webhook_admission_latencies_seconds',
-    'apiserver_admission_step_admission_latencies_seconds': 'admission_step_admission_latencies_seconds',
-    'apiserver_admission_controller_admission_latencies_seconds': 'admission_controller_admission_duration_seconds',
     # fmt: off
     'apiserver_admission_step_admission_latencies_seconds_summary':
         'admission_step_admission_latencies_seconds_summary',
