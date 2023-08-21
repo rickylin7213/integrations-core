@@ -145,3 +145,240 @@ class Etcd(OpenMetricsBaseCheck):
 
     def _perform_request(self, url, path):
         return self.http.get(url + path)
+
+        def _process_rate_metric(self, metric_name, metric, scraper_config):
+        for sample in metric.samples:
+            _tags = list(scraper_config['custom_tags'])
+            for label_name, label_value in iteritems(sample[self.SAMPLE_LABELS]):
+                _tags.append('{}:{}'.format(label_name, label_value))
+            self.rate(metric_name, sample[self.SAMPLE_VALUE], _tags        'average': 'etcd.leader.latency.avg',
+        'minimum': 'etcd.leader.latency.min',
+        'maximum': 'etcd.leader.latency.max',
+        'standardDeviation': 'etcd.leader.latency.stddev',
+    }
+
+
+    def __init__(self, name, init_config, instances):
+
+
+        self.HTTP_CONFIG_REMAPPER = {
+            'ssl_cert': {'name': 'tls_cert'},
+            'ssl_private_key': {'name': 'tls_private_key'},
+            'ssl_ca_cert': {'name': 'tls_ca_cert'},
+            'ssl_verify': {'name': 'tls_verify'},
+            'prometheus_timeout': {'name': 'timeout'},
+        }
+
+
+        super(Etcd, self).__init__(
+            name,
+            init_config,
+            instances,
+            default_instances={
+                'etcd': {
+                    'prometheus_url': 'http://localhost:2379/metrics',
+                    'namespace': 'etcd',
+                    'metrics': [METRIC_MAP],
+                    'send_histograms_buckets': True,
+                    'metadata_metric_name': 'etcd_server_version',
+                    'metadata_label_map': {'version': 'server_version'},
+                }
+            },
+            default_namespace='etcd',
+        )
+
+
+    def check(self, _):
+        scraper_config = self.get_scraper_config(self.instance)
+
+
+        if 'prometheus_url' not in scraper_config:
+            raise ConfigurationError('You have to define at least one `prometheus_url`.')
+
+
+        if not scraper_config.get('metrics_mapper'):
+            raise ConfigurationError(
+                'You have to collect at least one metric from the endpoint `{}`.'.format(
+                    scraper_config['prometheus_url']
+                )
+            )
+
+
+        tags = []
+
+
+        if is_affirmative(self.instance.get('leader_tag', True)):
+            self.add_leader_state_tag(scraper_config, tags)
+
+
+        scraper_config['_metric_tags'][:] = tags
+
+
+        self.process(scraper_config)
+
+
+    def access_api(self, scraper_config, path, data='{}'):
+        url = urlparse(scraper_config['prometheus_url'])
+        endpoint = '{}:{}{}'.format(url.scheme, url.netloc, path)
+
+
+        response = {}
+        try:
+            r = self.http.post(endpoint, data=data)
+            response.update(r.json())
+        except Exception as e:
+            self.log.debug('Error accessing GRPC gateway: %s', e)
+
+
+        return response
+
+
+    def is_leader(self, scraper_config):
+        response = self.access_api(scraper_config, '/v3/maintenance/status')
+
+
+        leader = response.get('leader')
+        member = response.get('header', {}).get('member_id')
+
+
+        return leader and member and leader == member
+
+
+    def add_leader_state_tag(self, scraper_config, tags):
+        is_leader = self.is_leader(scraper_config)
+
+
+        if is_leader is not None:
+            tags.append('is_leader:{}'.format('true' if is_leader else 'false'))
+
+
+    def transform_metadata(self, metric, scraper_config):
+        super(Etcd, self).transform_metadata(metric, scraper_config)
+
+
+        # Needed for backward compatibility, we continue to submit `etcd.server.version` metric
+        self.submit_openmetric('server.version', metric, scraper_config)
+
+
+    def _perform_request(self, url, path):
+        return self.http.get(url + path)
+
+
+        'average': 'etcd.leader.latency.avg',
+        'minimum': 'etcd.leader.latency.min',
+        'maximum': 'etcd.leader.latency.max',
+        'standardDeviation': 'etcd.leader.latency.stddev',
+    }
+
+
+    def __init__(self, name, init_config, instances):
+
+
+        self.HTTP_CONFIG_REMAPPER = {
+            'ssl_cert': {'name': 'tls_cert'},
+            'ssl_private_key': {'name': 'tls_private_key'},
+            'ssl_ca_cert': {'name': 'tls_ca_cert'},
+            'ssl_verify': {'name': 'tls_verify'},
+            'prometheus_timeout': {'name': 'timeout'},
+        }
+
+
+        super(Etcd, self).__init__(
+            name,
+            init_config,
+            instances,
+            default_instances={
+                'etcd': {
+                    'prometheus_url': 'http://localhost:2379/metrics',
+                    'namespace': 'etcd',
+                    'metrics': [METRIC_MAP],
+                    'send_histograms_buckets': True,
+                    'metadata_metric_name': 'etcd_server_version',
+                    'metadata_label_map': {'version': 'server_version'},
+                }
+            },
+            default_namespace='etcd',
+        )
+
+
+    def check(self, _):
+        scraper_config = self.get_scraper_config(self.instance)
+
+
+        if 'prometheus_url' not in scraper_config:
+            raise ConfigurationError('You have to define at least one `prometheus_url`.')
+
+
+        if not scraper_config.get('metrics_mapper'):
+            raise ConfigurationError(
+                'You have to collect at least one metric from the endpoint `{}`.'.format(
+                    scraper_config['prometheus_url']
+                )
+            )
+
+
+        tags = []
+
+
+        if is_affirmative(self.instance.get('leader_tag', True)):
+            self.add_leader_state_tag(scraper_config, tags)
+
+
+        scraper_config['_metric_tags'][:] = tags
+
+
+        self.process(scraper_config)
+
+
+    def access_api(self, scraper_config, path, data='{}'):
+        url = urlparse(scraper_config['prometheus_url'])
+        endpoint = '{}:{}{}'.format(url.scheme, url.netloc, path)
+
+
+        response = {}
+        try:
+            r = self.http.post(endpoint, data=data)
+            response.update(r.json())
+        except Exception as e:
+            self.log.debug('Error accessing GRPC gateway: %s', e)
+
+
+        return response
+
+
+    def is_leader(self, scraper_config):
+        response = self.access_api(scraper_config, '/v3/maintenance/status')
+
+
+        leader = response.get('leader')
+        member = response.get('header', {}).get('member_id')
+
+
+        return leader and member and leader == member
+
+
+    def add_leader_state_tag(self, scraper_config, tags):
+        is_leader = self.is_leader(scraper_config)
+
+
+        if is_leader is not None:
+            tags.append('is_leader:{}'.format('true' if is_leader else 'false'))
+
+
+    def transform_metadata(self, metric, scraper_config):
+        super(Etcd, self).transform_metadata(metric, scraper_config)
+
+
+        # Needed for backward compatibility, we continue to submit `etcd.server.version` metric
+        self.submit_openmetric('server.version', metric, scraper_config)
+
+
+    def _perform_request(self, url, path):
+        return self.http.get(url + path)
+
+    def _process_rate_metric(self, metric_name, metric, scraper_config):
+        for sample in metric.samples:
+            _tags = list(scraper_config['custom_tags'])
+            for label_name, label_value in iteritems(sample[self.SAMPLE_LABELS]):
+                _tags.append('{}:{}'.format(label_name, label_value))
+            self.rate(metric_name, sample[self.SAMPLE_VALUE], _tags)
