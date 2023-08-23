@@ -67,6 +67,5 @@ METRIC_MAP = {
     'process_max_fds': 'process.max.fds',
     'process_open_fds': 'process.open.fds',
     'process_resident_memory_bytes': 'process.resident.memory.bytes',
-    'process_virtual_memory_bytes': 'process.virtual.memory.bytes',
-    'etcd_server_version': 'server.version'
+    'process_virtual_memory_bytes': 'process.virtual.memory.bytes'
 }
